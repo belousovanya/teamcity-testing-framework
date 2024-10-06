@@ -1,0 +1,80 @@
+### Constants
+@host = 192.168.64.2
+
+### Hardcoded test data
+@projectId = test_project_1
+@buildTypeId = test_build_type_1
+
+### 1. Create project
+# @no-cookie-jar
+POST http://{{host}}:8111/app/rest/projects
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{
+  "parentProject": {
+    "locator": "_Root"
+  },
+  "name": "{{projectId}}",
+  "id": "{{projectId}}",
+  "copyAllAssociatedSettings": true
+}
+
+###
+
+### 2. Create build configuration
+# @no-cookie-jar
+POST http://{{host}}:8111/app/rest/buildTypes
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{
+  "id": "{{buildTypeId}}",
+  "name": "Print hello world",
+  "project": {
+    "id": "{{projectId}}"
+  },
+  "steps": {
+    "step": [
+      {
+        "name": "Print hello world",
+        "type": "simpleRunner",
+        "properties": {
+          "property": [
+            {
+              "name": "script.content",
+              "value": "echo 'Hello World!'"
+            },
+            {
+              "name": "teamcity.step.mode",
+              "value": "default"
+            },
+            {
+              "name": "use.custom.script",
+              "value": "true"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+
+###
+
+### 3. Run build
+# @no-cookie-jar
+POST http://{{host}}:8111/app/rest/buildQueue
+Content-Type: application/json
+Accept: application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{
+  "buildType": {
+    "id": "{{buildTypeId}}"
+  }
+}
+
+###
