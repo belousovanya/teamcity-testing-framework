@@ -1,33 +1,39 @@
 package com.example.teamcity.api;
 
 import com.examle.teamcity.api.BaseApiTest;
-import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.models.BuildType;
+import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.models.User;
-import com.example.teamcity.api.requests.checked.CheckedBase;
+import com.example.teamcity.api.requests.CheckedRequests;
 import com.example.teamcity.api.spec.Specifications;
 import org.testng.annotations.Test;
 
+import java.util.Arrays;
+
+import static com.example.teamcity.api.enums.Endpoint.*;
+import static com.example.teamcity.api.generators.TestDataGenerator.generate;
 import static io.qameta.allure.Allure.step;
 
 @Test(groups = {"Regression"})
 public class BuildTypeTest extends BaseApiTest {
     @Test(description = "User should be able to create build type", groups = {"Positive", "CRUD"})
     public void userCreatesBuildTypeTest() {
-        step("Create user", () ->  {
-            var user = User.builder()
-                    .username("name1")
-                    .password("password1")
-                    .build();
+        var user = generate(User.class);
 
-            var requester = new CheckedBase<User>(Specifications.superUserAuth(), Endpoint.USERS);
+        superUserCheckRequests.getRequest(USERS).create(user);
+        var userCheckRequests = new CheckedRequests(Specifications.authSpec(user));
 
-            requester.create(user);
-        });
+        var project = generate(Project.class);
 
+        project = userCheckRequests.<Project>getRequest(PROJECTS).create(project);
 
-        step("Create project by user");
-        step("Create buildType for project by user");
-        step("Check buildType was created successfully with correct data");
+        var buildType = generate(Arrays.asList(project), BuildType.class);
+
+        userCheckRequests.getRequest(BUILD_TYPES).create(buildType);
+
+        var createdBuildType = userCheckRequests.<BuildType>getRequest(BUILD_TYPES).read(buildType.getId());
+
+        softy.assertEquals(buildType.getName(), createdBuildType.getName(), "Build type name is not correct");
     }
 
     @Test(description = "User should not be able to create two build types with the same id", groups = {"Negative", "CRUD"})
