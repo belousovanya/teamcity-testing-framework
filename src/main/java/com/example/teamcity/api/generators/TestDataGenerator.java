@@ -4,9 +4,11 @@ import com.example.teamcity.api.annotations.Optional;
 import com.example.teamcity.api.annotations.Parameterizable;
 import com.example.teamcity.api.annotations.Random;
 import com.example.teamcity.api.models.BaseModel;
+import com.example.teamcity.api.models.TestData;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -76,6 +78,26 @@ public final class TestDataGenerator {
             return instance;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException
                  | NoSuchMethodException e) {
+            throw new IllegalStateException("Cannot generate test data", e);
+        }
+    }
+
+    public static TestData generate() {
+        // Идем по всем полям TestData и для каждого, кто наследник BaseModel вызывыем generate() c передачей уже сгенерированных сущностей
+        try {
+            var instance = TestData.class.getDeclaredConstructor().newInstance();
+            var generatedModels = new ArrayList<BaseModel>();
+            for (var field: TestData.class.getDeclaredFields()) {
+                field.setAccessible(true);
+                if (BaseModel.class.isAssignableFrom(field.getType())) {
+                    var generatedModel = generate(generatedModels, field.getType().asSubclass(BaseModel.class));
+                    field.set(instance, generatedModel);
+                    generatedModels.add(generatedModel);
+                }
+                field.setAccessible(false);
+            }
+            return instance;
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new IllegalStateException("Cannot generate test data", e);
         }
     }
