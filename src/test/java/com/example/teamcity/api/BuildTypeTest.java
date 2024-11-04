@@ -1,6 +1,6 @@
 package com.example.teamcity.api;
 
-import com.examle.teamcity.api.BaseApiTest;
+import com.example.teamcity.api.generators.TestDataGenerator;
 import com.example.teamcity.api.models.BuildType;
 import com.example.teamcity.api.models.Project;
 import com.example.teamcity.api.models.Roles;
@@ -35,7 +35,7 @@ public class BuildTypeTest extends BaseApiTest {
 
     @Test(description = "User should not be able to create two build types with the same id", groups = {"Negative", "CRUD"})
     public void userCreatesTwoBuildTypesWithTheSameIdTest() {
-        var buildTypeWithSameId = generate(Arrays.asList(testData.getProject()), BuildType.class, testData.getBuildType().getId());
+        var buildTypeWithSameId = TestDataGenerator.generate(Arrays.asList(testData.getProject()), BuildType.class, testData.getBuildType().getId());
 
         superUserCheckRequests.getRequest(USERS).create(testData.getUser());
 
