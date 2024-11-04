@@ -4,7 +4,7 @@ import com.codeborne.selenide.SelenideElement;
 import lombok.Getter;
 
 @Getter
-public class ProjectElement extends BasePageElement {
+public class ProjectElement extends BasePageElement{
     private SelenideElement name;
     private SelenideElement link;
     private SelenideElement button;

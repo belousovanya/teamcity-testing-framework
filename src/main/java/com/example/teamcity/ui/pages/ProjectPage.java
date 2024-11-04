@@ -9,8 +9,6 @@ public class ProjectPage extends BasePage {
     private static final String PROJECT_URL = "/project/%s";
 
     public SelenideElement title = $("span[class*='ProjectPageHeader']");
-
-
     public static ProjectPage open(String projectId) {
         return Selenide.open(PROJECT_URL.formatted(projectId), ProjectPage.class);
     }
