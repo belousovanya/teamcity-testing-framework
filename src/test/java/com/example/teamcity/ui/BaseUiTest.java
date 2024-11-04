@@ -1,12 +1,14 @@
-package com.examle.teamcity.ui;
+package com.example.teamcity.ui;
 
 import com.codeborne.selenide.Selenide;
-import com.examle.teamcity.BaseTest;
+import com.example.teamcity.BaseTest;
 import com.example.teamcity.api.config.Config;
 import com.example.teamcity.api.enums.Endpoint;
+import com.example.teamcity.api.generators.TestDataStorage;
 import com.example.teamcity.api.models.User;
 import com.example.teamcity.ui.pages.LoginPage;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 
 import java.util.Map;
@@ -24,8 +26,16 @@ public class BaseUiTest extends BaseTest {
         browserCapabilities.setCapability("selenoid:options", Map.of("enableVNC", true, "enableLog", true));
     }
 
+    protected TestDataStorage testDataStorage;
+
+    @BeforeMethod(alwaysRun = true)
+    public void setUp() {
+        testDataStorage = TestDataStorage.getStorage();
+    }
+
     @AfterMethod(alwaysRun = true)
-    public void closeWebDriver() {
+    public void tearDown() {
+        testDataStorage.deleteCreatedEntities();
         Selenide.closeWebDriver();
     }
 
