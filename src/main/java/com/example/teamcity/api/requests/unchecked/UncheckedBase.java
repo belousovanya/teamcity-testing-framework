@@ -18,42 +18,35 @@ public class UncheckedBase extends Request implements CrudInterface {
     public Response create(BaseModel model) {
         return RestAssured
                 .given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .spec(spec)
+                .contentType(ContentType.JSON) // Устанавливаем Content-Type
                 .body(model)
                 .post(endpoint.getUrl());
     }
 
     @Override
-    public Response read(String id) {
+    public Response read(String locator) {
         return RestAssured
                 .given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .spec(spec)
-                .get(endpoint.getUrl() + "/id:" + id);
+                .get(endpoint.getUrl() + "/" + locator);
     }
 
     @Override
-    public Response update(String id, BaseModel model) {
+    public Response update(String locator, BaseModel model) {
         return RestAssured
                 .given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
+                .spec(spec)
+                .contentType(ContentType.JSON) // Устанавливаем Content-Type
                 .body(model)
-                .spec(spec)
-                .put(endpoint.getUrl() + "/id:" + id);
-
+                .put(endpoint.getUrl() + "/" + locator);
     }
 
     @Override
-    public Response delete(String id) {
+    public Response delete(String locator) {
         return RestAssured
                 .given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
                 .spec(spec)
-                .delete(endpoint.getUrl() + "/id:" + id);
+                .delete(endpoint.getUrl() + "/" + locator);
     }
 }
