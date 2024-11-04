@@ -10,13 +10,12 @@ import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
 public class Specifications {
-
-    private static Specifications spec;
-
     private static RequestSpecBuilder reqBuilder() {
         var requestBuilder = new RequestSpecBuilder();
         requestBuilder.addFilter(new RequestLoggingFilter());
         requestBuilder.addFilter(new ResponseLoggingFilter());
+        requestBuilder.setContentType(ContentType.JSON);
+        requestBuilder.setAccept(ContentType.JSON);
         return requestBuilder;
     }
 
@@ -28,10 +27,7 @@ public class Specifications {
 
     public static RequestSpecification unauthSpec() {
         var requestBuilder = reqBuilder();
-        requestBuilder.setContentType(ContentType.JSON);
-        requestBuilder.setAccept(ContentType.JSON);
         return requestBuilder.build();
-
     }
 
     public static RequestSpecification authSpec(User user) {

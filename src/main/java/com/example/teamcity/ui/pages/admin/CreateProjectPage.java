@@ -11,6 +11,8 @@ public class CreateProjectPage extends CreateBasePage {
     private static final String PROJECT_SHOW_MODE = "createProjectMenu";
 
     private SelenideElement projectNameInput = $("#projectName");
+    private SelenideElement buildTypeNameInput = $("#buildTypeName");
+    private SelenideElement submitButton = $($("input[value='Proceed']"));
 
     public static CreateProjectPage open(String projectId) {
         return Selenide.open(CREATE_URL.formatted(projectId, PROJECT_SHOW_MODE), CreateProjectPage.class);
