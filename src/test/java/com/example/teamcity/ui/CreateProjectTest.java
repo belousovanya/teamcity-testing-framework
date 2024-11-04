@@ -1,4 +1,4 @@
-package com.examle.teamcity.ui;
+package com.example.teamcity.ui;
 
 import com.codeborne.selenide.Condition;
 import com.example.teamcity.api.enums.Endpoint;
@@ -8,7 +8,6 @@ import com.example.teamcity.ui.pages.ProjectsPage;
 import com.example.teamcity.ui.pages.admin.CreateProjectPage;
 import org.testng.annotations.Test;
 
-import static com.example.teamcity.api.enums.Endpoint.PROJECTS;
 import static io.qameta.allure.Allure.step;
 
 @Test(groups = {"Regression"})
