@@ -19,7 +19,7 @@ public class UncheckedBase extends Request implements CrudInterface {
         return RestAssured
                 .given()
                 .spec(spec)
-                .contentType(ContentType.JSON) // Устанавливаем Content-Type
+                .contentType(ContentType.JSON)
                 .body(model)
                 .post(endpoint.getUrl());
     }
@@ -37,7 +37,7 @@ public class UncheckedBase extends Request implements CrudInterface {
         return RestAssured
                 .given()
                 .spec(spec)
-                .contentType(ContentType.JSON) // Устанавливаем Content-Type
+                .contentType(ContentType.JSON)
                 .body(model)
                 .put(endpoint.getUrl() + "/" + locator);
     }
