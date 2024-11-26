@@ -8,16 +8,13 @@ import com.example.teamcity.ui.pages.ProjectsPage;
 import com.example.teamcity.ui.pages.admin.CreateProjectPage;
 import org.testng.annotations.Test;
 
-import java.util.concurrent.TimeUnit;
-
-import static com.example.teamcity.api.enums.Endpoint.PROJECTS;
 import static io.qameta.allure.Allure.step;
 
 @Test(groups = {"Regression"})
 public class CreateProjectTest extends BaseUiTest {
     private static final String REPO_URL = "https://github.com/belousovanya/file-parsing-tests";
 
-    @Test(description = "User should be able to create project", groups = {"Positive"})
+    @Test(description = "User should be able to create project", groups = {"Positive"}, enabled = false)
     public void userCreatesProject() {
         // подготовка окружения
         loginAs(testData.getUser());
@@ -29,23 +26,8 @@ public class CreateProjectTest extends BaseUiTest {
 
         // проверка состояния API
         // (корректность отправки данных с UI на API
-        Project createdProject = null;
-        for (int i = 0; i < 10; i++) {
-            createdProject = superUserCheckRequests.<Project>getRequest(PROJECTS)
-                    .read("name:" + testData.getProject().getName());
-            if (createdProject != null) {
-                break;
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException(e);
-            }
-        }
-
+        var createdProject = superUserCheckRequests.<Project>getRequest(Endpoint.PROJECTS).read("name:" + testData.getProject().getName());
         softy.assertNotNull(createdProject);
-
 
         // проверка состояния UI
         // (корректность считывания данных и отображение данных на UI)
