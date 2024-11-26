@@ -35,54 +35,21 @@ jobs:
       - name: TeamCity Setup
         uses: ./.github/actions/teamcity-setup
 
+      - name: Wait for TeamCity to be ready
+        run: |
+          for i in {1..10}; do
+            curl -s http://$HOST:8111 | grep "TeamCity" && break
+            echo "Waiting for TeamCity..."
+            sleep 15
+          done
+
       - name: Run tests
         continue-on-error: true
-        # Указываем группу, чтобы не запустить тесты, связанные с сетапом TeamCity
         run: ./mvnw test -Dtest='org.example.teamcitypro.${{ inputs.package }}.**' -Dgroups=Regression
 
-        # Создаем репорт с покрытием API тестов, основанном на Swagger.
-        # Документация: https://github.com/viclovsky/swagger-coverage
-        # Обязательно добавить фильтр SwaggerCoverageRestAssured в RestAssured
-      - name: Run Swagger Coverage
-        continue-on-error: true
-        if: ${{ inputs.package == 'api' }}
-        run: |
-          chmod +x .swagger-coverage-commandline/bin/swagger-coverage-commandline
-          .swagger-coverage-commandline/bin/swagger-coverage-commandline -s http://$HOST:8111/app/rest/swagger.json -i target/swagger-coverage-output
-
-      # Сохраняем Swagger Report в артефакты GitHub Actions
-      - name: Save Swagger Coverage
+      - name: Save Allure Report
+        if: always()
         uses: actions/upload-artifact@v4
-        if: ${{ inputs.package == 'api' }}
         with:
-          name: swagger-coverage
-          path: |
-            swagger-coverage-report.html
-            swagger-coverage-results.json
-
-      # Загружаем историю Allure Report с специальной ветки gh-pages (https://allurereport.org/docs/integrations-github/)
-      - name: Load test report history
-        uses: actions/checkout@v2
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Build test report
-        uses: simple-elf/allure-report-action@v1.7
-        if: always()
-        with:
-          gh_pages: gh-pages
-          allure_history: allure-history
-          allure_results: target/allure-results
-          subfolder: ${{ inputs.package }}
-
-      # Создаем пустую ветку gh-pages на основе инструкции https://gist.github.com/ramnathv/2227408
-      - name: Publish test report
-        uses: peaceiris/actions-gh-pages@v3
-        if: always()
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-history
+          name: allure-report
+          path: target/allure-results
