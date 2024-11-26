@@ -10,17 +10,21 @@ runs:
         distribution: 'zulu'
 
     - name: Setup maven wrapper
+      shell: bash
       run: chmod +x mvnw
 
     - name: Install ifconfig
+      shell: bash
       run: sudo apt-get update && sudo apt-get install -y net-tools
 
     - name: Set up host environment variable
+      shell: bash
       run: |
         HOST=$(ifconfig | grep -E "([0-9]{1,3}\.){3}[0-9]{1,3}" | grep -v 127.0.0.1 | awk '{ print $2 }' | cut -f2 -d: | head -n1)
         echo "HOST=$HOST" >> $GITHUB_ENV
 
     - name: Run TeamCity Server
+      shell: bash
       run: |
         docker run -u 0 -d --name teamcity-server  \
         -v $(pwd)/tmp/teamcity_server/datadir:/data/teamcity_server/datadir \
@@ -29,6 +33,7 @@ runs:
         jetbrains/teamcity-server:2023.11.1
 
     - name: Wait for TeamCity server
+      shell: bash
       run: |
         for i in {1..10}; do
           curl -s http://localhost:8111 | grep "TeamCity" && break
@@ -37,9 +42,11 @@ runs:
         done
 
     - name: Setup TeamCity server
+      shell: bash
       run: ./mvnw clean test -Dtest=SetupServerTest#setupTeamCityServerTest
 
     - name: Set up superUserToken
+      shell: bash
       run: |
         SUPER_USER_TOKEN=$(docker logs teamcity-server | grep 'Super user authentication token' | tail -n 1 | awk '{print $6}')
         echo "SUPER_USER_TOKEN=$SUPER_USER_TOKEN" >> $GITHUB_ENV
