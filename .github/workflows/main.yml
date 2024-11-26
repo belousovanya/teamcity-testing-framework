@@ -27,15 +27,16 @@ jobs:
     with:
       package: ui
 
-  # Деплой фронтенда и бэкенда
   manual-prod-approval:
-    needs: [ automation-api, automation-ui ]
+    needs: report
+    if: success()
     runs-on: ubuntu-latest
-    environment: 'prod'
+    environment: prod
     steps:
       - name: Approve backend and frontend to production
-        run: echo Approve to production
+        run: echo Approved to production
 
+  # Деплой бэкенда и фронтенда
   deploy-prod:
     needs: manual-prod-approval
     uses: ./.github/workflows/deploy-prod.yml

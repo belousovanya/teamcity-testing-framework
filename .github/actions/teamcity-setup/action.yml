@@ -1,4 +1,5 @@
-name: Teamcity Setup
+name: Teamcity setup
+description: Setup Teamcity server and agent
 
 runs:
   using: composite
@@ -6,7 +7,7 @@ runs:
     - name: Set up JDK
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '21'
         distribution: 'zulu'
 
     # По умолчанию в ubuntu отсутствует команда ifconfig
@@ -16,17 +17,17 @@ runs:
 
     - name: Set up host environment variable
       shell: bash
-      # Команда для определения ip адреса для обращения из другого контейнера в документации Selenoid UI: https://aerokube.com/selenoid-ui/latest/
+      # Команда для определения ip адреса для обращения из другого контейнера, рекомендуется в документации Selenoid UI: https://aerokube.com/selenoid-ui/latest/
       run: |
         echo "HOST=$(ifconfig | grep -E "([0-9]{1,3}\.){3}[0-9]{1,3}" | grep -v 127.0.0.1 | awk '{ print $2 }' | cut -f2 -d: | head -n1)" >> $GITHUB_ENV
 
+    # Храним переменные как в переменных среды ($GITHUB_ENV), для использования внутри этого yml файла, так и в config.properties, для использования в тестах
     - name: Set up host config property
       shell: bash
-      run: echo "host=$HOST:8111" >> src/main/resources/config.properties
+      run: sed -i "s/^host=.*/host=$HOST:8111/" src/main/resources/config.properties
 
     - name: Pull Selenoid browsers
       shell: bash
-      # Парсить browsers.json и будет docker pull все браузеры
       run: |
         for browser in $(awk -F'"' '/"image": "/{print $4}' "config/browsers.json"); do
           docker pull $browser
@@ -34,7 +35,7 @@ runs:
 
     - name: Run Selenoid
       shell: bash
-      # Флаг -d запускает контейнер в фоновом режиме, если мы этого не сделаем, мы никогда не перейдем к следующему степу
+      # Флаг -d запускает контейнер в фоновом режиме (так как, например, контейнер с сервером не имеет окончания, он просто всегда включен,
       run: |
         docker run -d --name selenoid \
         -v /var/run/docker.sock:/var/run/docker.sock \
@@ -51,29 +52,25 @@ runs:
         aerokube/selenoid-ui:latest-release \
         --selenoid-uri http://$HOST:4444
 
-    - name: Run TeamCity Server
+    - name: Run TeamCity server
       shell: bash
-      # Флаг -u 0 запускает контейнер от имени root, чтобы был доступ к записи файлов в директории, которые указаны в volume.
+      # Флаг -u 0 запускает контейнер от имени root, чтобы был доступ на запись файлов в директории, указанные в volume.
       run: |
-        docker run -u 0 -d --name teamcity-server  \
+        docker run -u 0 -d --name teamcity-server \
         -v $(pwd)/tmp/teamcity_server/datadir:/data/teamcity_server/datadir \
-        -v $(pwd)/tmp/teamcity_server/logs:/opt/teamcity/logs  \
+        -v $(pwd)/tmp/teamcity_server/logs:/opt/teamcity/logs \
         -p 8111:8111 \
         jetbrains/teamcity-server:2023.11.1
 
-    - name: Cat config.properties
-      shell: bash
-      run: cat src/main/resources/config.properties
-
-    - name: Setup TeamCity server
-      shell: bash
+    - name: Set up TeamCity server
       # Настройка сервера при первом запуске (принятие лицензии, выбор базы данных и тд), реализованная в виде теста
-      run: ./mvnw clean test -Dtest=SetupServerTest#setupTeamCityServerTest
+      shell: bash
+      run: ./mvnw clean versions:update-properties test -Dtest=SetupServerTest#setupTeamCityServerTest
 
-    - name: Setup superUserToken environment variable
+    - name: Set up superUserToken environment variable
       shell: bash
       run: echo "SUPER_USER_TOKEN=$(docker logs teamcity-server | grep 'Super user authentication token' | tail -n 1 | awk '{print $6}')" >> $GITHUB_ENV
 
     - name: Set up superUserToken config property
       shell: bash
-      run: echo "superUserToken=$SUPER_USER_TOKEN" >> src/main/resources/config.properties
+      run: sed -i "s/^superUserToken=.*/superUserToken=$SUPER_USER_TOKEN/" src/main/resources/config.properties

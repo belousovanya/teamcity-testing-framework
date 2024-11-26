@@ -29,58 +29,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'zulu'
-
-      - name: Install ifconfig
-        shell: bash
-        run: sudo apt-get update && sudo apt-get install -y net-tools
-
-      - name: Set up host environment variable
-        shell: bash
-        run: |
-          echo "HOST=$(ifconfig | grep -E "([0-9]{1,3}\.){3}[0-9]{1,3}" | grep -v 127.0.0.1 | awk '{ print $2 }' | cut -f2 -d: | head -n1)" >> $GITHUB_ENV
-
-      - name: Set up host config property
-        shell: bash
-        run: echo "host=$HOST:8111" >> src/main/resources/config.properties
-
-      - name: Pull Selenoid browsers
-        shell: bash
-        run: |
-          for browser in $(awk -F'"' '/"image": "/{print $4}' "config/browsers.json"); do
-            docker pull $browser
-          done
-
-      - name: Run Selenoid
-        shell: bash
-        run: |
-          docker run -d --name selenoid \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          -v $(pwd)/config/:/etc/selenoid/:ro \
-          -p 4444:4444 \
-          aerokube/selenoid:latest-release
-
-      - name: Wait for TeamCity Server
-        run: |
-          until curl -s -o /dev/null -w "%{http_code}" http://$HOST:8111/app/rest/swagger.json | grep -q "200"; do
-            echo "Waiting for TeamCity server..."
-            sleep 5
-          done
-          echo "TeamCity server is up."
+      - name: TeamCity Setup
+        uses: ./.github/actions/teamcity-setup
 
       - name: Run tests
         continue-on-error: true
+        # Указываем группу, чтобы не запустить тесты, связанные с сетапом TeamCity
         run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**' -Dgroups=Regression
 
+      # Создаем репорт с покрытием API тестов, основанном на Swagger.
+      # Документация: https://github.com/viclovsky/swagger-coverage
+      # Обязательно добавить фильтр SwaggerCoverageRestAssured в RestAssured
       - name: Run Swagger Coverage
         continue-on-error: true
         if: ${{ inputs.package == 'api' }}
         run: .swagger-coverage-commandline/bin/swagger-coverage-commandline -s http://$HOST:8111/app/rest/swagger.json -i target/swagger-coverage-output
 
+      # Сохраняем Swagger Report в артефакты GitHub Actions
       - name: Save Swagger Coverage
         uses: actions/upload-artifact@v4
         if: ${{ inputs.package == 'api' }}
@@ -89,3 +54,29 @@ jobs:
           path: |
             swagger-coverage-report.html
             swagger-coverage-results.json
+      # Загружаем историю Allure Report с специальной ветки gh-pages (https://allurereport.org/docs/integrations-github/)
+      - name: Load test report history
+        uses: actions/checkout@v2
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Build test report
+        uses: simple-elf/allure-report-action@v1.7
+        if: always()
+        with:
+          gh_pages: gh-pages
+          allure_history: allure-history
+          allure_results: target/allure-results
+          subfolder: ${{ inputs.package }}
+
+      # Создаем пустую ветку gh-pages на основе инструкции https://gist.github.com/ramnathv/2227408
+      - name: Publish test report
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
