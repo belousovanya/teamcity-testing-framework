@@ -13,7 +13,7 @@ runs:
       shell: bash
       run: chmod +x mvnw
 
-    # По умолчанию в ubuntu отсуствует команда ifconfig
+    # По умолчанию в ubuntu отсутствует команда ifconfig
     - name: Install ifconfig
       shell: bash
       run: sudo apt-get update && sudo apt-get install -y net-tools
