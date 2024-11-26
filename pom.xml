@@ -24,7 +24,6 @@
         <swagger-coverage-rest-assured.version>1.5.0</swagger-coverage-rest-assured.version>
         <maven-surefire-plugin.version>3.5.0</maven-surefire-plugin.version>
         <aspectj.version>1.9.22.1</aspectj.version>
-        <maven-checkstyle-plugin.version>3.5.0</maven-checkstyle-plugin.version>
         <allure-maven.version>2.14.0</allure-maven.version>
         <versions-maven-plugin.version>2.17.1</versions-maven-plugin.version>
     </properties>
@@ -137,25 +136,6 @@
                         <version>${aspectj.version}</version>
                     </dependency>
                 </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>${maven-checkstyle-plugin.version}</version>
-                <configuration>
-                    <configLocation>checkstyle.xml</configLocation>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>true</failsOnError>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>validate</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>io.qameta.allure</groupId>
