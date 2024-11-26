@@ -20,6 +20,9 @@ jobs:
           java-version: '17'
           distribution: 'zulu'
 
+      - name: Setup maven wrapper
+        run: chmod +x mvnw
+
       - name: Validate Checkstyle
         run: ./mvnw validate
 
@@ -35,15 +38,17 @@ jobs:
       - name: Run tests
         continue-on-error: true
         # Указываем группу, чтобы не запустить тесты, связанные с сетапом TeamCity
-        run: ./mvnw test -Dtest='com.example.teamcity.${{ inputs.package }}.**' -Dgroups=Regression
+        run: ./mvnw test -Dtest='org.example.teamcitypro.${{ inputs.package }}.**' -Dgroups=Regression
 
-      # Создаем репорт с покрытием API тестов, основанном на Swagger.
-      # Документация: https://github.com/viclovsky/swagger-coverage
-      # Обязательно добавить фильтр SwaggerCoverageRestAssured в RestAssured
+        # Создаем репорт с покрытием API тестов, основанном на Swagger.
+        # Документация: https://github.com/viclovsky/swagger-coverage
+        # Обязательно добавить фильтр SwaggerCoverageRestAssured в RestAssured
       - name: Run Swagger Coverage
         continue-on-error: true
         if: ${{ inputs.package == 'api' }}
-        run: .swagger-coverage-commandline/bin/swagger-coverage-commandline -s http://$HOST:8111/app/rest/swagger.json -i target/swagger-coverage-output
+        run: |
+          chmod +x .swagger-coverage-commandline/bin/swagger-coverage-commandline
+          .swagger-coverage-commandline/bin/swagger-coverage-commandline -s http://$HOST:8111/app/rest/swagger.json -i target/swagger-coverage-output
 
       # Сохраняем Swagger Report в артефакты GitHub Actions
       - name: Save Swagger Coverage
@@ -54,6 +59,7 @@ jobs:
           path: |
             swagger-coverage-report.html
             swagger-coverage-results.json
+
       # Загружаем историю Allure Report с специальной ветки gh-pages (https://allurereport.org/docs/integrations-github/)
       - name: Load test report history
         uses: actions/checkout@v2
