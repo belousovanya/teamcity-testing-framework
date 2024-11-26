@@ -29,8 +29,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: TeamCity Setup
-        uses: ./.github/actions/teamcity-setup
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
+      - name: Install ifconfig
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y net-tools
+
+      - name: Set up host environment variable
+        shell: bash
+        run: |
+          echo "HOST=$(ifconfig | grep -E "([0-9]{1,3}\.){3}[0-9]{1,3}" | grep -v 127.0.0.1 | awk '{ print $2 }' | cut -f2 -d: | head -n1)" >> $GITHUB_ENV
+
+      - name: Set up host config property
+        shell: bash
+        run: echo "host=$HOST:8111" >> src/main/resources/config.properties
+
+      - name: Pull Selenoid browsers
+        shell: bash
+        run: |
+          for browser in $(awk -F'"' '/"image": "/{print $4}' "config/browsers.json"); do
+            docker pull $browser
+          done
+
+      - name: Run Selenoid
+        shell: bash
+        run: |
+          docker run -d --name selenoid \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v $(pwd)/config/:/etc/selenoid/:ro \
+          -p 4444:4444 \
+          aerokube/selenoid:latest-release
 
       - name: Wait for TeamCity Server
         run: |
