@@ -9,11 +9,7 @@ runs:
         java-version: '17'
         distribution: 'zulu'
 
-    - name: Setup maven wrapper
-      shell: bash
-      run: chmod +x mvnw
-
-    # По умолчанию в ubuntu отсутствует команда ifconfig
+    # По умолчанию в ubuntu отсуствуе команда ifconfig
     - name: Install ifconfig
       shell: bash
       run: sudo apt-get update && sudo apt-get install -y net-tools
@@ -30,7 +26,7 @@ runs:
 
     - name: Pull Selenoid browsers
       shell: bash
-      # Парсить browsers.json и docker pull все браузеры
+      # Парсить browsers.json и будет docker pull все браузеры
       run: |
         for browser in $(awk -F'"' '/"image": "/{print $4}' "config/browsers.json"); do
           docker pull $browser
@@ -81,7 +77,3 @@ runs:
     - name: Set up superUserToken config property
       shell: bash
       run: echo "superUserToken=$SUPER_USER_TOKEN" >> src/main/resources/config.properties
-
-    - name: Cat config.properties
-      shell: bash
-      run: cat src/main/resources/config.properties
