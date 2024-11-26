@@ -1,0 +1,5 @@
+.allure
+.idea
+target
+tmp
+*.iml
